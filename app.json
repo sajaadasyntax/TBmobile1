@@ -51,7 +51,9 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#1a365d",
-          "sounds": ["./assets/notification-sound.wav"]
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ]
         }
       ],
       [
@@ -65,8 +67,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "5a5d27fe-b9d9-42a7-ada4-04d5e8b2108b"
       }
-    }
+    },
+    "owner": "sajaadammar"
   }
 }
