@@ -1,18 +1,40 @@
 {
-  "name": "mobile",
+  "name": "trustbuild-mobile",
   "version": "1.0.0",
+  "description": "TrustBuild Mobile App - Find Trusted Contractors",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
+    "start:clear": "expo start --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "prebuild": "expo prebuild",
+    "prebuild:android": "expo prebuild --platform android",
+    "prebuild:ios": "expo prebuild --platform ios",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "build:all": "eas build --platform all",
+    "submit:android": "eas submit --platform android",
+    "submit:ios": "eas submit --platform ios",
+    "update": "eas update",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-community/netinfo": "^11.4.1",
     "expo": "~54.0.25",
+    "expo-constants": "^18.0.10",
+    "expo-device": "^8.0.9",
+    "expo-linking": "^8.0.9",
+    "expo-notifications": "^0.32.13",
+    "expo-secure-store": "^15.0.7",
+    "expo-splash-screen": "^31.0.11",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-webview": "^13.16.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
