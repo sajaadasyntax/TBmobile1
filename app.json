@@ -49,10 +49,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#1a365d",
-          "sounds": [
-            "./assets/notification-sound.wav"
-          ]
+          "color": "#1a365d"
         }
       ],
       [
