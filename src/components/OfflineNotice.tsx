@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 interface OfflineNoticeProps {
@@ -15,6 +16,7 @@ interface OfflineNoticeProps {
 
 export function OfflineNotice({ onRetry }: OfflineNoticeProps) {
   const { isConnected, isInternetReachable } = useNetworkStatus();
+  const insets = useSafeAreaInsets();
   const slideAnim = React.useRef(new Animated.Value(-100)).current;
 
   const isOffline = !isConnected || isInternetReachable === false;
@@ -35,7 +37,10 @@ export function OfflineNotice({ onRetry }: OfflineNoticeProps) {
     <Animated.View
       style={[
         styles.container,
-        { transform: [{ translateY: slideAnim }] },
+        { 
+          transform: [{ translateY: slideAnim }],
+          paddingTop: Math.max(insets.top, 16),
+        },
       ]}
     >
       <View style={styles.content}>
@@ -63,7 +68,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#ef4444',
-    paddingTop: 50, // Account for status bar
     paddingBottom: 16,
     paddingHorizontal: 16,
     zIndex: 1000,

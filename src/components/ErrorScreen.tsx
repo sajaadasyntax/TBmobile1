@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ErrorScreenProps {
   title?: string;
@@ -24,10 +25,21 @@ export function ErrorScreen({
   error,
 }: ErrorScreenProps) {
   const errorMessage = error instanceof Error ? error.message : error;
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: Math.max(insets.top, 24),
+            paddingBottom: Math.max(insets.bottom, 24),
+            paddingLeft: Math.max(insets.left, 24),
+            paddingRight: Math.max(insets.right, 24),
+          }
+        ]}
+      >
         <View style={styles.iconContainer}>
           <Text style={styles.icon}>⚠️</Text>
         </View>

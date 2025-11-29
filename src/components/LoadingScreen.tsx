@@ -8,6 +8,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface LoadingScreenProps {
   message?: string;
@@ -15,6 +16,7 @@ interface LoadingScreenProps {
 
 export function LoadingScreen({ message = 'Loading...' }: LoadingScreenProps) {
   const spinValue = React.useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
     Animated.loop(
@@ -28,7 +30,15 @@ export function LoadingScreen({ message = 'Loading...' }: LoadingScreenProps) {
   }, [spinValue]);
 
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      {
+        paddingTop: Math.max(insets.top, 20),
+        paddingBottom: Math.max(insets.bottom, 20),
+        paddingLeft: Math.max(insets.left, 20),
+        paddingRight: Math.max(insets.right, 20),
+      }
+    ]}>
       <View style={styles.logoContainer}>
         <Text style={styles.logoText}>TrustBuild</Text>
         <Text style={styles.tagline}>Find Trusted Contractors</Text>
@@ -47,7 +57,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#1a365d',
-    padding: 20,
   },
   logoContainer: {
     alignItems: 'center',

@@ -3,13 +3,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
-  SafeAreaView,
   StatusBar,
   BackHandler,
   Platform,
   Alert,
   Linking as RNLinking,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation, WebViewMessageEvent } from 'react-native-webview';
 import * as SplashScreen from 'expo-splash-screen';
 import * as ExpoLinking from 'expo-linking';
@@ -315,26 +315,29 @@ export default function App() {
   // Show error screen
   if (hasError && !isOffline) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
-        <ErrorScreen
-          title="Connection Error"
-          message={errorMessage || 'Failed to connect to TrustBuild. Please check your internet connection and try again.'}
-          onRetry={handleRetry}
-          showDetails={__DEV__}
-          error={errorMessage}
-        />
-      </SafeAreaView>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+          <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+          <ErrorScreen
+            title="Connection Error"
+            message={errorMessage || 'Failed to connect to TrustBuild. Please check your internet connection and try again.'}
+            onRetry={handleRetry}
+            showDetails={__DEV__}
+            error={errorMessage}
+          />
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
-      
-      <OfflineNotice onRetry={handleRetry} />
-      
-      <WebView
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+        <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+        
+        <OfflineNotice onRetry={handleRetry} />
+        
+        <WebView
         ref={webViewRef}
         source={{ uri: currentUrl }}
         style={styles.webview}
@@ -373,7 +376,8 @@ export default function App() {
           <LoadingScreen message="Connecting to TrustBuild..." />
         </View>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
