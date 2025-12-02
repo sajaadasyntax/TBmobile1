@@ -292,19 +292,43 @@ export default function App() {
   const shouldStartLoadWithRequest = useCallback((request: any) => {
     const { url } = request;
     
-    // Allow navigation within the app domain
-    if (url.startsWith(config.webAppUrl) || url.startsWith('about:')) {
+    // Allow about: and blob: URLs
+    if (url.startsWith('about:') || url.startsWith('blob:') || url.startsWith('data:')) {
+      return true;
+    }
+    
+    // Handle special schemes (tel:, mailto:, etc.) - open in system handler
+    if (url.startsWith('tel:') || url.startsWith('mailto:') || url.startsWith('sms:')) {
+      RNLinking.openURL(url);
+      return false;
+    }
+    
+    // Parse URLs to check domain
+    try {
+      const requestUrl = new URL(url);
+      const appUrl = new URL(config.webAppUrl);
+      
+      // Allow navigation within the app domain (including www and subdomains)
+      const appDomain = appUrl.hostname.replace(/^www\./, '');
+      const requestDomain = requestUrl.hostname.replace(/^www\./, '');
+      
+      // Check if request is to the same domain or a subdomain
+      if (requestDomain === appDomain || requestDomain.endsWith(`.${appDomain}`)) {
+        return true;
+      }
+      
+      // Also allow localhost and local development
+      if (requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1') {
+        return true;
+      }
+    } catch (e) {
+      // If URL parsing fails, allow navigation
+      console.warn('Failed to parse URL:', url);
       return true;
     }
     
     // Open external URLs in system browser
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      RNLinking.openURL(url);
-      return false;
-    }
-    
-    // Handle special schemes (tel:, mailto:, etc.)
-    if (url.startsWith('tel:') || url.startsWith('mailto:') || url.startsWith('sms:')) {
       RNLinking.openURL(url);
       return false;
     }
@@ -317,15 +341,15 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-          <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
-          <ErrorScreen
-            title="Connection Error"
-            message={errorMessage || 'Failed to connect to TrustBuild. Please check your internet connection and try again.'}
-            onRetry={handleRetry}
-            showDetails={__DEV__}
-            error={errorMessage}
-          />
-        </SafeAreaView>
+        <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+        <ErrorScreen
+          title="Connection Error"
+          message={errorMessage || 'Failed to connect to TrustBuild. Please check your internet connection and try again.'}
+          onRetry={handleRetry}
+          showDetails={__DEV__}
+          error={errorMessage}
+        />
+      </SafeAreaView>
       </SafeAreaProvider>
     );
   }
@@ -333,11 +357,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-        <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
-        
-        <OfflineNotice onRetry={handleRetry} />
-        
-        <WebView
+      <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+      
+      <OfflineNotice onRetry={handleRetry} />
+      
+      <WebView
         ref={webViewRef}
         source={{ uri: currentUrl }}
         style={styles.webview}
@@ -376,7 +400,7 @@ export default function App() {
           <LoadingScreen message="Connecting to TrustBuild..." />
         </View>
       )}
-      </SafeAreaView>
+    </SafeAreaView>
     </SafeAreaProvider>
   );
 }
