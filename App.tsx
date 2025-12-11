@@ -258,6 +258,10 @@ export default function App() {
         isApp: true,
         platform: '${Platform.OS}',
         version: '${Constants.expoConfig?.version || '1.0.0'}',
+        // Open external URL in system browser
+        openExternal: function(url) {
+          this.sendMessage('OPEN_EXTERNAL', { url: url });
+        },
       };
       
       // Intercept token storage
@@ -277,6 +281,59 @@ export default function App() {
         }
         return originalRemoveItem(key);
       };
+      
+      // Override window.open to stay in WebView for internal links
+      const originalOpen = window.open;
+      window.open = function(url, target, features) {
+        if (url) {
+          try {
+            const urlObj = new URL(url, window.location.origin);
+            const currentHost = window.location.hostname.replace(/^www\./, '');
+            const targetHost = urlObj.hostname.replace(/^www\./, '');
+            
+            // Check if it's an internal link or allowed domain
+            if (targetHost === currentHost || 
+                targetHost.endsWith('.' + currentHost) ||
+                targetHost.endsWith('.stripe.com') ||
+                targetHost === 'stripe.com') {
+              // Navigate within WebView
+              window.location.href = url;
+              return null;
+            }
+          } catch (e) {
+            console.warn('Failed to parse URL in window.open:', url);
+          }
+          
+          // External URL - open in system browser
+          window.TrustBuildMobile.openExternal(url);
+          return null;
+        }
+        return originalOpen.call(window, url, target, features);
+      };
+      
+      // Handle link clicks that might open in new window
+      document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.target === '_blank') {
+          const href = link.href;
+          if (href) {
+            try {
+              const urlObj = new URL(href, window.location.origin);
+              const currentHost = window.location.hostname.replace(/^www\./, '');
+              const targetHost = urlObj.hostname.replace(/^www\./, '');
+              
+              // Internal links should stay in WebView
+              if (targetHost === currentHost || targetHost.endsWith('.' + currentHost)) {
+                e.preventDefault();
+                window.location.href = href;
+                return;
+              }
+            } catch (err) {
+              console.warn('Failed to parse link URL:', href);
+            }
+          }
+        }
+      }, true);
       
       // Notify web app that it's running in mobile container
       window.dispatchEvent(new CustomEvent('trustbuild-mobile-ready', {
@@ -307,13 +364,18 @@ export default function App() {
     try {
       const requestUrl = new URL(url);
       const appUrl = new URL(config.webAppUrl);
+      const apiUrl = new URL(config.apiUrl);
       
       // Allow navigation within the app domain (including www and subdomains)
       const appDomain = appUrl.hostname.replace(/^www\./, '');
+      const apiDomain = apiUrl.hostname.replace(/^www\./, '');
       const requestDomain = requestUrl.hostname.replace(/^www\./, '');
       
-      // Check if request is to the same domain or a subdomain
-      if (requestDomain === appDomain || requestDomain.endsWith(`.${appDomain}`)) {
+      // Check if request is to the same domain, a subdomain, or API domain
+      if (requestDomain === appDomain || 
+          requestDomain.endsWith(`.${appDomain}`) ||
+          requestDomain === apiDomain ||
+          requestDomain.endsWith(`.${apiDomain}`)) {
         return true;
       }
       
@@ -321,13 +383,28 @@ export default function App() {
       if (requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1') {
         return true;
       }
+      
+      // Allow Stripe payment URLs to stay in WebView for better UX
+      if (requestDomain === 'js.stripe.com' || 
+          requestDomain === 'checkout.stripe.com' ||
+          requestDomain.endsWith('.stripe.com') ||
+          requestDomain === 'stripe.com') {
+        return true;
+      }
+      
+      // Allow Google OAuth/authentication URLs
+      if (requestDomain === 'accounts.google.com' ||
+          requestDomain.endsWith('.google.com')) {
+        return true;
+      }
+      
     } catch (e) {
       // If URL parsing fails, allow navigation
       console.warn('Failed to parse URL:', url);
       return true;
     }
     
-    // Open external URLs in system browser
+    // Open external URLs in system browser (e.g., social media, maps, etc.)
     if (url.startsWith('http://') || url.startsWith('https://')) {
       RNLinking.openURL(url);
       return false;
